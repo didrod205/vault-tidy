@@ -11,3 +11,4 @@ main.js
 .DS_Store
 .ghtoken
 .testlicense
+.paddle_*

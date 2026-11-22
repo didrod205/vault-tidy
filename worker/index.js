@@ -6,12 +6,6 @@ const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const DAILY_LIMIT = 150;
 const TAG_RE = /^[^\s!"#$%&'()*+,.:;<=>?@\[\]\\^`{|}~]+$/u;
 
-const SOON_HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vault Tidy Pro</title>
-<style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#1e1e1e;color:#dcddde;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}
-.c{max-width:520px;padding:32px}h1{color:#fff;margin:0 0 8px}a{color:#a88bfa}img{max-width:100%;border-radius:10px;margin-top:20px;border:1px solid #333}</style></head>
-<body><div class="c"><h1>Vault Tidy Pro</h1><p>AI tools for the Vault Tidy Obsidian plugin: find synonym and duplicate tags, and tag untagged notes. No API key needed.</p>
-<p><b>Checkout is opening very soon</b> ($4/month or $29/year). Everything else in Vault Tidy is free. Follow the <a href="https://github.com/didrod205/vault-tidy">GitHub repo</a> to get notified.</p>
-<img src="/img/pro-ai.png" alt="Vault Tidy Pro"></div></body></html>`;
 
 const json = (data, status = 200) =>
 	new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json", "access-control-allow-origin": "*" } });
@@ -24,25 +18,11 @@ async function sha(s) {
 async function validateLicense(env, key, instance) {
 	if (!key || !instance) return { ok: false, error: "Missing license. Activate Vault Tidy Pro in the plugin settings." };
 	if (env.DEV_KEY && key === env.DEV_KEY) return { ok: true, id: "dev" };
-	const id = await sha(key + ":" + instance);
-	const cacheKey = new Request(`https://cache.vault-tidy/lic/${id}`);
-	const cache = caches.default;
-	const hit = await cache.match(cacheKey);
-	if (hit) return { ...(await hit.json()), id };
-	const r = await fetch("https://api.lemonsqueezy.com/v1/licenses/validate", {
-		method: "POST",
-		headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
-		body: `license_key=${encodeURIComponent(key)}&instance_id=${encodeURIComponent(instance)}`,
-	});
-	const j = await r.json().catch(() => ({}));
-	let res;
-	if (!j.valid) res = { ok: false, error: "License is not valid or has expired." };
-	else if (j.license_key?.test_mode && !String(env.TEST_KEYS ?? "").split(",").includes(key)) res = { ok: false, error: "This is a test-mode key and cannot be used." };
-	else if (env.LS_STORE_ID && String(j.meta?.store_id) !== String(env.LS_STORE_ID)) res = { ok: false, error: "This key is not a Vault Tidy key." };
-	else if (env.LS_PRODUCT_ID && String(j.meta?.product_id) !== String(env.LS_PRODUCT_ID)) res = { ok: false, error: "This key is not a Vault Tidy key." };
-	else res = { ok: true };
-	await cache.put(cacheKey, new Response(JSON.stringify(res), { headers: { "cache-control": `max-age=${res.ok ? 3600 : 300}` } }));
-	return { ...res, id };
+	const rec = await getLic(env, key);
+	if (!rec) return { ok: false, error: "License not found." };
+	if (!ACTIVE.has(rec.status)) return { ok: false, error: "Your Vault Tidy Pro subscription is not active." };
+	if (!rec.instances.some((i) => i.id === instance)) return { ok: false, error: "This device is not activated. Enter your license key again." };
+	return { ok: true, id: await sha(key) };
 }
 
 async function useQuota(env, id) {
@@ -238,39 +218,110 @@ async function suggestTags(env, body) {
 	return { suggestions: out };
 }
 
-// Provider-agnostic licensing: the plugin only talks to this API, so the payment
-// provider can change later without a plugin update.
-async function lsCall(path, data) {
-	const r = await fetch(`https://api.lemonsqueezy.com/v1/licenses/${path}`, {
-		method: "POST",
-		headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
-		body: Object.entries(data)
-			.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-			.join("&"),
-	});
-	return r.json().catch(() => ({}));
+// ---------- Licensing (our own store, fed by Paddle webhooks) ----------
+// The plugin only talks to this API, so the payment provider can change without a plugin update.
+const ACTIVE = new Set(["active", "trialing", "past_due"]);
+const MAX_DEVICES = 3;
+
+async function getLic(env, key) {
+	const k = String(key || "").trim().toUpperCase();
+	if (!k) return null;
+	const rec = await env.DB.prepare("SELECT * FROM licenses WHERE key = ?").bind(k).first();
+	if (!rec) return null;
+	const inst = await env.DB.prepare("SELECT id, name, at FROM instances WHERE key = ?").bind(k).all();
+	return { ...rec, instances: inst.results || [] };
+}
+function newKey() {
+	const A = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+	const b = crypto.getRandomValues(new Uint8Array(20));
+	const c = [...b].map((x) => A[x % A.length]).join("");
+	return `VT-${c.slice(0, 5)}-${c.slice(5, 10)}-${c.slice(10, 15)}-${c.slice(15, 20)}`;
 }
 
 async function activate(env, b) {
-	const key = String(b.key ?? "").trim();
+	const key = String(b.key ?? "").trim().toUpperCase();
 	const name = String(b.instance_name ?? "obsidian").slice(0, 100);
 	if (!key) return json({ error: "Enter a license key." }, 400);
-	const j = await lsCall("activate", { license_key: key, instance_name: name });
-	if (!j.activated) return json({ error: j.error || j.message || "Activation failed." }, 400);
-	if (j.license_key?.test_mode && !String(env.TEST_KEYS ?? "").split(",").includes(key)) {
-		await lsCall("deactivate", { license_key: key, instance_id: j.instance?.id });
-		return json({ error: "This is a test-mode key and cannot be used." }, 400);
-	}
-	if (env.LS_STORE_ID && String(j.meta?.store_id) !== String(env.LS_STORE_ID)) {
-		await lsCall("deactivate", { license_key: key, instance_id: j.instance?.id });
-		return json({ error: "This key is not a Vault Tidy key." }, 400);
-	}
-	return json({ instanceId: j.instance?.id, email: j.meta?.customer_email, status: j.license_key?.status, plan: j.meta?.variant_name });
+	const rec = await getLic(env, key);
+	if (!rec) return json({ error: "License key not found. Check for typos or recover it at vault-tidy.elab-studio.com/support" }, 400);
+	if (!ACTIVE.has(rec.status)) return json({ error: "This subscription is not active." }, 400);
+	if (rec.instances.length >= MAX_DEVICES)
+		return json({ error: `This key is already active on ${MAX_DEVICES} devices. Deactivate one in its Vault Tidy settings first.` }, 400);
+	const id = crypto.randomUUID();
+	await env.DB.prepare("INSERT INTO instances (id, key, name, at) VALUES (?, ?, ?, ?)").bind(id, key, name, Date.now()).run();
+	return json({ instanceId: id, email: rec.email, status: rec.status, plan: rec.plan });
 }
 
 async function deactivate(env, b) {
-	const j = await lsCall("deactivate", { license_key: String(b.key ?? ""), instance_id: String(b.instanceId ?? "") });
-	return json({ ok: !!j.deactivated });
+	await env.DB.prepare("DELETE FROM instances WHERE id = ? AND key = ?").bind(String(b.instanceId ?? ""), String(b.key ?? "").trim().toUpperCase()).run();
+	return json({ ok: true });
+}
+
+async function byTransaction(env, txn) {
+	const row = txn ? await env.DB.prepare("SELECT key FROM txns WHERE txn = ?").bind(txn).first() : null;
+	return json(row ? { key: row.key } : { pending: true });
+}
+
+async function recover(env, b) {
+	const email = String(b.email ?? "").trim().toLowerCase();
+	const order = String(b.order ?? "").trim();
+	if (!email || !order) return json({ error: "Enter your email and order ID." }, 400);
+	const row = await env.DB.prepare("SELECT l.key, l.status, l.email FROM txns t JOIN licenses l ON l.key = t.key WHERE t.txn = ? OR t.invoice = ? LIMIT 1").bind(order, order).first();
+	if (!row || (row.email || "").toLowerCase() !== email) return json({ error: "No license found for that email and order ID. Contact hello@elab-studio.com." }, 404);
+	return json({ key: row.key, status: row.status });
+}
+
+async function paddleApi(env, path) {
+	const base = env.PADDLE_ENV === "sandbox" ? "https://sandbox-api.paddle.com" : "https://api.paddle.com";
+	const r = await fetch(base + path, { headers: { Authorization: `Bearer ${env.PADDLE_API_KEY}` } });
+	return r.json().catch(() => ({}));
+}
+
+async function verifyPaddle(env, req, raw) {
+	const h = req.headers.get("paddle-signature") || "";
+	const parts = Object.fromEntries(h.split(";").map((p) => p.split("=")));
+	if (!parts.ts || !parts.h1 || !env.PADDLE_WEBHOOK_SECRET) return false;
+	if (Math.abs(Date.now() / 1000 - Number(parts.ts)) > 300) return false;
+	const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(env.PADDLE_WEBHOOK_SECRET), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+	const sig = await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(`${parts.ts}:${raw}`));
+	const hex = [...new Uint8Array(sig)].map((x) => x.toString(16).padStart(2, "0")).join("");
+	return hex === parts.h1;
+}
+
+const SUB_STATUS = { active: "active", trialing: "trialing", past_due: "past_due", paused: "paused", canceled: "canceled" };
+
+async function paddleWebhook(env, req) {
+	const raw = await req.text();
+	if (!(await verifyPaddle(env, req, raw))) return json({ error: "bad signature" }, 401);
+	const ev = JSON.parse(raw);
+	const d = ev.data || {};
+	const t = ev.event_type;
+	if (t === "transaction.completed" && d.subscription_id) {
+		let row = await env.DB.prepare("SELECT key FROM licenses WHERE sub = ?").bind(d.subscription_id).first();
+		let key = row?.key;
+		if (!key) {
+			key = newKey();
+			const cust = d.customer_id ? await paddleApi(env, `/customers/${d.customer_id}`) : {};
+			const price = d.items?.[0]?.price || {};
+			await env.DB.prepare("INSERT OR IGNORE INTO licenses (key, sub, customer, email, plan, status, created) VALUES (?, ?, ?, ?, ?, 'active', ?)")
+				.bind(key, d.subscription_id, d.customer_id || "", cust.data?.email || "", price.billing_cycle?.interval === "year" ? "Yearly" : "Monthly", Date.now())
+				.run();
+			row = await env.DB.prepare("SELECT key FROM licenses WHERE sub = ?").bind(d.subscription_id).first();
+			key = row.key;
+		} else {
+			await env.DB.prepare("UPDATE licenses SET status = 'active' WHERE key = ? AND status = 'refunded'").bind(key).run();
+		}
+		await env.DB.prepare("INSERT OR REPLACE INTO txns (txn, key, invoice) VALUES (?, ?, ?)").bind(d.id, key, d.invoice_number || null).run();
+	} else if (t && t.startsWith("subscription.") && d.id && SUB_STATUS[d.status]) {
+		await env.DB.prepare("UPDATE licenses SET status = ? WHERE sub = ?").bind(SUB_STATUS[d.status], d.id).run();
+	} else if ((t === "adjustment.created" || t === "adjustment.updated") && d.action === "refund" && d.status === "approved" && d.type === "full") {
+		const row = await env.DB.prepare("SELECT key FROM txns WHERE txn = ?").bind(d.transaction_id).first();
+		if (row) {
+			await env.DB.prepare("UPDATE licenses SET status = 'refunded' WHERE key = ?").bind(row.key).run();
+			await env.DB.prepare("DELETE FROM instances WHERE key = ?").bind(row.key).run();
+		}
+	}
+	return json({ ok: true });
 }
 
 export default {
@@ -278,11 +329,19 @@ export default {
 		const url = new URL(req.url);
 		if (req.method === "OPTIONS") return new Response(null, { headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "POST" } });
 		if (url.pathname === "/health") return json({ ok: true });
-		if (url.pathname === "/pro") {
-			if (env.BUY_URL) return Response.redirect(env.BUY_URL, 302);
-			return new Response(SOON_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
-		}
+		if (url.pathname === "/pro") return Response.redirect("https://vault-tidy.elab-studio.com/#pricing", 302);
+		if (url.pathname === "/v1/license/by-transaction") return byTransaction(env, url.searchParams.get("txn"));
 		if (req.method !== "POST") return json({ error: "Not found" }, 404);
+		if (url.pathname === "/v1/paddle/webhook") return paddleWebhook(env, req);
+		if (url.pathname === "/v1/license/recover") {
+			let b;
+			try {
+				b = await req.json();
+			} catch {
+				return json({ error: "Bad request" }, 400);
+			}
+			return recover(env, b);
+		}
 		if (url.pathname === "/v1/license/activate" || url.pathname === "/v1/license/deactivate") {
 			let b;
 			try {

@@ -51,5 +51,5 @@ button.vt-chip { cursor: pointer; }
 .vt-grid button { margin-left: 0; }
 .vt-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 .vt-arrow { color: var(--text-faint); margin: 0 2px; }
-.vt-grid-ai { grid-template-columns: auto 1fr; }
+.vt-suggest-row.vt-grid.vt-grid-ai { grid-template-columns: auto 1fr; }
 .vt-target { width: 150px; height: 26px; font-size: var(--font-ui-small); }

@@ -1,0 +1,36 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vault Tidy: clean up tags and properties in Obsidian</title><meta name="description" content="Rename, merge and delete tags, bulk-edit properties and find & replace across your Obsidian vault. Preview every change, undo anything. Optional AI Pro."><link rel="stylesheet" href="/site.css">
+<meta property="og:title" content="Vault Tidy: clean up tags and properties in Obsidian"><meta property="og:description" content="Rename, merge and delete tags, bulk-edit properties and find & replace across your Obsidian vault. Preview every change, undo anything. Optional AI Pro."><meta property="og:image" content="/img/free-tags.png"><script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script><script>
+Paddle.Environment.set("sandbox");
+Paddle.Initialize({ token: "test_99efebdd63778a5ecf7f34c8991", eventCallback: function (e) {
+  if (e.name === "checkout.completed" && e.data && e.data.transaction_id) location.href = "/thanks/?txn=" + encodeURIComponent(e.data.transaction_id);
+}});
+function buy(priceId){ Paddle.Checkout.open({ items: [{ priceId: priceId, quantity: 1 }], settings: { displayMode: "overlay", theme: "dark" } }); }
+</script></head>
+<body><header><div class="wrap"><a class="brand" href="/"><span class="logo">✦</span>Vault Tidy</a><nav><a href="/#features">Features</a><a href="/#pricing">Pricing</a><a href="/support/">Support</a></nav></div></header><main>
+<div class="wrap hero"><h1>Your Obsidian vault,<br>finally tidy.</h1>
+<p>Rename, merge and delete tags, bulk-edit properties and find &amp; replace across every note. See a preview of every change before it happens, and undo any batch with one click.</p>
+<a class="btn primary" href="https://community.obsidian.md/plugins/vault-tidy">Get it free in Obsidian</a> <a class="btn" href="#pricing">See Pro</a>
+<div class="shot"><img src="/img/free-tags.png" alt="Vault Tidy tag manager in Obsidian"></div></div>
+<section id="features"><div class="wrap"><h2>Free forever</h2><div class="grid">
+<div class="card"><h3>Tag manager</h3><p>Every tag with usage counts. Rename (nested tags follow), merge several into one, or delete. Frontmatter and inline tags, code blocks skipped.</p></div>
+<div class="card"><h3>Duplicate finder</h3><p>Spots #Book vs #books, #to-read vs #toread and typos like #produtivity, then merges them in one go.</p></div>
+<div class="card"><h3>Properties</h3><p>Rename or delete a property across the vault, replace a value, or set a property on every note in a folder. Your YAML formatting is kept.</p></div>
+<div class="card"><h3>Find &amp; replace</h3><p>Plain text or regex with groups, whole word, case and folder scope. Skips code blocks by default.</p></div>
+<div class="card"><h3>Preview, then apply</h3><p>A diff of every affected note. Untick anything you want to keep.</p></div>
+<div class="card"><h3>One-click undo</h3><p>Every batch is saved locally. Undo it from History, even days later.</p></div>
+</div></div></section>
+<section id="pricing"><div class="wrap"><h2>Vault Tidy Pro</h2><p style="color:var(--muted);margin-top:-12px">AI that understands what your tags mean. No API key, nothing to set up.</p>
+<div class="price">
+<div class="card"><div class="tag">Most popular</div><div class="amount">$29 <small>/ year</small></div><ul><li>AI synonym and duplicate tag finder</li><li>Auto-tag untagged notes</li><li>Up to 3 devices</li><li>Save 40% vs monthly</li></ul><a class="btn primary" href="#pricing" onclick="event.preventDefault();buy('pri_01m812sz6z4g156swbe7s72der')">Get Pro yearly</a></div>
+<div class="card"><div class="amount">$4 <small>/ month</small></div><ul><li>Everything in Pro</li><li>Cancel anytime</li><li>Up to 3 devices</li></ul><a class="btn" href="#pricing" onclick="event.preventDefault();buy('pri_01m812syy12th1t6dtg07jxr98')">Get Pro monthly</a></div>
+</div>
+<p style="color:var(--muted);font-size:14px;margin-top:16px">Prices in USD. Taxes may apply depending on your country. 30-day money-back guarantee. Our order process is conducted by our online reseller Paddle.com, the Merchant of Record for all orders.</p>
+<div class="shot" style="max-width:860px;margin-left:0"><img src="/img/pro-ai.png" alt="Vault Tidy Pro AI tools"></div>
+</div></section>
+<section class="faq"><div class="wrap"><h2>FAQ</h2>
+<details><summary>How do I activate Pro?</summary><p>After checkout your license key appears on the confirmation page. You can recover it anytime on the Support page with your email and order ID. In Obsidian open Settings → Vault Tidy → Enter license key.</p></details>
+<details><summary>What data is sent to the AI?</summary><p>Only tag names with counts, or the title and first 1,500 characters of the notes you choose to tag. Nothing is stored and nothing is used for training.</p></details>
+<details><summary>Can I cancel?</summary><p>Yes, anytime from the link in your receipt email. Pro keeps working until the end of the paid period.</p></details>
+<details><summary>Lost your license key?</summary><p><a href="/support/">Recover it here</a> with the email you used at checkout.</p></details>
+</div></section></main><footer><div class="wrap"><div>© 2026 E:LAB. Vault Tidy is an independent plugin and is not affiliated with Obsidian.</div><div><a href="/terms/">Terms of Service</a> · <a href="/privacy/">Privacy Policy</a> · <a href="/refund/">Refund Policy</a> · <a href="/support/">Contact</a></div></div></footer></body></html>

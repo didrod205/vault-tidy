@@ -2,6 +2,8 @@ name = "vault-tidy-api"
 main = "index.js"
 compatibility_date = "2025-10-01"
 workers_dev = true
+account_id = "11fae51cb7f3f9a266fb0fe03edef6ec"
+routes = [{ pattern = "vault-tidy.elab-studio.com", custom_domain = true }]
 
 [ai]
 binding = "AI"
@@ -10,9 +12,19 @@ binding = "AI"
 binding = "QUOTA"
 id = "b7276ff2f5094be7877f45f1d4e48417"
 
+[[kv_namespaces]]
+binding = "LIC"
+id = "6713d4d0d71f4f3393f9504dbc161736"
+
 [assets]
 directory = "public"
-run_worker_first = ["/v1/*", "/health"]
+run_worker_first = ["/v1/*", "/health", "/pro"]
+html_handling = "auto-trailing-slash"
 
 [vars]
-LS_STORE_ID = "332572"
+PADDLE_ENV = "sandbox"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "vault-tidy"
+database_id = "d2a557f2-6649-4be4-af21-e0dd5d6daf15"

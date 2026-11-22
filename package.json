@@ -1,6 +1,6 @@
 {
   "name": "vault-tidy",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Clean up tags, properties and text across your Obsidian vault with previews and one-click undo.",
   "main": "main.js",
   "scripts": {
