@@ -256,7 +256,7 @@ async function activate(env, b) {
 	const name = String(b.instance_name ?? "obsidian").slice(0, 100);
 	if (!key) return json({ error: "Enter a license key." }, 400);
 	const j = await lsCall("activate", { license_key: key, instance_name: name });
-	if (!j.activated) return json({ error: j.error || "Activation failed." }, 400);
+	if (!j.activated) return json({ error: j.error || j.message || "Activation failed." }, 400);
 	if (j.license_key?.test_mode && !String(env.TEST_KEYS ?? "").split(",").includes(key)) {
 		await lsCall("deactivate", { license_key: key, instance_id: j.instance?.id });
 		return json({ error: "This is a test-mode key and cannot be used." }, 400);
