@@ -1,0 +1,11 @@
+node_modules/
+test-dist/
+.devapp/
+.devkey
+harness/app.css
+harness/dist.js
+harness/vault.json
+test-vault/.obsidian/
+main.js
+*.log
+.DS_Store

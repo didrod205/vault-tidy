@@ -1,0 +1,22 @@
+{
+  "name": "vault-tidy",
+  "version": "0.1.0",
+  "description": "Clean up tags, properties and text across your Obsidian vault with previews and one-click undo.",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "test": "node esbuild.test.mjs && node --test test-dist/*.mjs"
+  },
+  "author": "E:LAB",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "builtin-modules": "^3.3.0",
+    "esbuild-wasm": "^0.24.0",
+    "lucide": "^1.77.0",
+    "obsidian": "latest",
+    "tslib": "^2.6.0",
+    "typescript": "^5.6.0"
+  }
+}

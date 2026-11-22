@@ -1,0 +1,11 @@
+name = "vault-tidy-api"
+main = "index.js"
+compatibility_date = "2025-10-01"
+workers_dev = true
+
+[ai]
+binding = "AI"
+
+[[kv_namespaces]]
+binding = "QUOTA"
+id = "b7276ff2f5094be7877f45f1d4e48417"
