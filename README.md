@@ -2,6 +2,8 @@
 
 Clean up your Obsidian vault in minutes: rename, merge and delete tags, bulk-edit properties, and find & replace across every note. **Every change is previewed first and can be undone with one click.**
 
+![Vault Tidy](https://vault-tidy-api.gdode2080.workers.dev/img/free-tags.png)
+
 ## Free features
 
 - **Tag manager**: see every tag with usage counts, rename (nested tags follow), merge several tags into one, delete. Works on frontmatter `tags` and inline `#tags`, skips code blocks.
@@ -17,12 +19,14 @@ Pro adds AI tools that understand what your tags mean. No API key and nothing to
 - **AI duplicate finder**: finds synonyms, abbreviations and translations (`#ml` → `#machine-learning`, `#js` → `#javascript`, `#책` → `#book`) and double-checks every pair so related-but-different tags are left alone.
 - **Tag untagged notes**: suggests 1–3 tags per note, using your existing tags first.
 
-Get a license at https://elabstudio.lemonsqueezy.com and paste the key in **Settings → Vault Tidy**. One license works on up to 3 devices.
+![Vault Tidy Pro](https://vault-tidy-api.gdode2080.workers.dev/img/pro-ai.png)
+
+Get a license at https://vault-tidy-api.gdode2080.workers.dev/pro and paste the key in **Settings → Vault Tidy**. One license works on up to 3 devices.
 
 ### Disclosures (required by Obsidian's developer policies)
 
 - **Payment**: the AI features require a paid license. Everything else is free forever.
-- **Network use**: only when you use Pro. License activation talks to Lemon Squeezy (`api.lemonsqueezy.com`). AI requests go to the Vault Tidy API (`vault-tidy-api.gdode2080.workers.dev`, Cloudflare Workers AI) and contain only tag names with counts, or the title and first 1,500 characters of the notes you chose to tag. Nothing is stored on the server and nothing is used for training.
+- **Network use**: only when you use Pro. License activation and AI requests go to the Vault Tidy API (`vault-tidy-api.gdode2080.workers.dev`, Cloudflare Workers AI; licenses are checked with Lemon Squeezy). AI requests contain only tag names with counts, or the title and first 1,500 characters of the notes you chose to tag. Nothing is stored on the server and nothing is used for training.
 - **No telemetry**, no ads, no access to files outside your vault. Undo snapshots are stored locally in the plugin folder (`history.json`) and can be cleared in settings.
 
 ## Install

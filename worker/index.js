@@ -6,6 +6,13 @@ const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const DAILY_LIMIT = 150;
 const TAG_RE = /^[^\s!"#$%&'()*+,.:;<=>?@\[\]\\^`{|}~]+$/u;
 
+const SOON_HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vault Tidy Pro</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#1e1e1e;color:#dcddde;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}
+.c{max-width:520px;padding:32px}h1{color:#fff;margin:0 0 8px}a{color:#a88bfa}img{max-width:100%;border-radius:10px;margin-top:20px;border:1px solid #333}</style></head>
+<body><div class="c"><h1>Vault Tidy Pro</h1><p>AI tools for the Vault Tidy Obsidian plugin: find synonym and duplicate tags, and tag untagged notes. No API key needed.</p>
+<p><b>Checkout is opening very soon</b> ($4/month or $29/year). Everything else in Vault Tidy is free. Follow the <a href="https://github.com/didrod205/vault-tidy">GitHub repo</a> to get notified.</p>
+<img src="/img/pro-ai.png" alt="Vault Tidy Pro"></div></body></html>`;
+
 const json = (data, status = 200) =>
 	new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json", "access-control-allow-origin": "*" } });
 
@@ -30,6 +37,7 @@ async function validateLicense(env, key, instance) {
 	const j = await r.json().catch(() => ({}));
 	let res;
 	if (!j.valid) res = { ok: false, error: "License is not valid or has expired." };
+	else if (j.license_key?.test_mode && !String(env.TEST_KEYS ?? "").split(",").includes(key)) res = { ok: false, error: "This is a test-mode key and cannot be used." };
 	else if (env.LS_STORE_ID && String(j.meta?.store_id) !== String(env.LS_STORE_ID)) res = { ok: false, error: "This key is not a Vault Tidy key." };
 	else if (env.LS_PRODUCT_ID && String(j.meta?.product_id) !== String(env.LS_PRODUCT_ID)) res = { ok: false, error: "This key is not a Vault Tidy key." };
 	else res = { ok: true };
@@ -133,8 +141,6 @@ async function tagMerges(env, body) {
 			used.add(k);
 		}
 	}
-	if (!cands.length) return { groups: [] };
-
 	// second pass: verify each (target, source) pair; trivial pairs are auto-accepted
 	const norm = (t) => t.toLowerCase().replace(/[-_\s.]/g, "").replace(/(ies)$/, "y").replace(/(?<!s)s$/, "");
 	const pairs = [];
@@ -155,9 +161,26 @@ async function tagMerges(env, body) {
 		okIds = new Set((v.results ?? []).filter((r) => r.same === true).map((r) => Number(r.id)));
 	}
 	const keep = new Set(pairs.filter((p) => p.auto || okIds.has(ask2.indexOf(p))).map((p) => p.gi + "|" + p.src));
-	const groups = cands
+	let groups = cands
 		.map((g, gi) => ({ ...g, sources: g.sources.filter((s) => keep.has(gi + "|" + s)) }))
 		.filter((g) => g.sources.length);
+	used.clear();
+	groups.forEach((g) => [g.target, ...g.sources].forEach((x) => used.add(x.toLowerCase())));
+	// rule-based groups (plural/separator/case) for tags the model skipped
+	const normKey = (t) => t.toLowerCase().replace(/[-_\s.]/g, "").replace(/ies$/, "y").replace(/(?<!s)s$/, "");
+	const byNorm = new Map();
+	for (const t of tags) {
+		if (used.has(t.tag.toLowerCase())) continue;
+		const k = normKey(t.tag);
+		if (!byNorm.has(k)) byNorm.set(k, []);
+		byNorm.get(k).push(t.tag);
+	}
+	for (const v of byNorm.values()) {
+		if (v.length < 2) continue;
+		const target = [...v].sort((a, b) => countOf.get(b) - countOf.get(a) || (a === a.toLowerCase() ? -1 : 1) || a.length - b.length)[0];
+		groups.push({ target, sources: v.filter((x) => x !== target), reason: "same word, different spelling" });
+		v.forEach((x) => used.add(x.toLowerCase()));
+	}
 	return body.debug ? { groups, debug: { first: res, cands } } : { groups };
 }
 
@@ -215,12 +238,60 @@ async function suggestTags(env, body) {
 	return { suggestions: out };
 }
 
+// Provider-agnostic licensing: the plugin only talks to this API, so the payment
+// provider can change later without a plugin update.
+async function lsCall(path, data) {
+	const r = await fetch(`https://api.lemonsqueezy.com/v1/licenses/${path}`, {
+		method: "POST",
+		headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+		body: Object.entries(data)
+			.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+			.join("&"),
+	});
+	return r.json().catch(() => ({}));
+}
+
+async function activate(env, b) {
+	const key = String(b.key ?? "").trim();
+	const name = String(b.instance_name ?? "obsidian").slice(0, 100);
+	if (!key) return json({ error: "Enter a license key." }, 400);
+	const j = await lsCall("activate", { license_key: key, instance_name: name });
+	if (!j.activated) return json({ error: j.error || "Activation failed." }, 400);
+	if (j.license_key?.test_mode && !String(env.TEST_KEYS ?? "").split(",").includes(key)) {
+		await lsCall("deactivate", { license_key: key, instance_id: j.instance?.id });
+		return json({ error: "This is a test-mode key and cannot be used." }, 400);
+	}
+	if (env.LS_STORE_ID && String(j.meta?.store_id) !== String(env.LS_STORE_ID)) {
+		await lsCall("deactivate", { license_key: key, instance_id: j.instance?.id });
+		return json({ error: "This key is not a Vault Tidy key." }, 400);
+	}
+	return json({ instanceId: j.instance?.id, email: j.meta?.customer_email, status: j.license_key?.status, plan: j.meta?.variant_name });
+}
+
+async function deactivate(env, b) {
+	const j = await lsCall("deactivate", { license_key: String(b.key ?? ""), instance_id: String(b.instanceId ?? "") });
+	return json({ ok: !!j.deactivated });
+}
+
 export default {
 	async fetch(req, env) {
 		const url = new URL(req.url);
 		if (req.method === "OPTIONS") return new Response(null, { headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "POST" } });
 		if (url.pathname === "/health") return json({ ok: true });
+		if (url.pathname === "/pro") {
+			if (env.BUY_URL) return Response.redirect(env.BUY_URL, 302);
+			return new Response(SOON_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
+		}
 		if (req.method !== "POST") return json({ error: "Not found" }, 404);
+		if (url.pathname === "/v1/license/activate" || url.pathname === "/v1/license/deactivate") {
+			let b;
+			try {
+				b = await req.json();
+			} catch {
+				return json({ error: "Bad request" }, 400);
+			}
+			return url.pathname.endsWith("activate") && !url.pathname.endsWith("deactivate") ? activate(env, b) : deactivate(env, b);
+		}
 		const lic = await validateLicense(env, req.headers.get("x-license-key"), req.headers.get("x-instance-id"));
 		if (!lic.ok) return json({ error: lic.error }, 401);
 		const q = await useQuota(env, lic.id);
