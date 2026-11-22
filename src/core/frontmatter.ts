@@ -54,7 +54,7 @@ export interface KeyBlock {
 	inline: string; // text after "key:" on the key line (trimmed)
 }
 
-const KEY_RE = /^([^\s#\-][^:]*?):(?:\s+(.*)|\s*)$/;
+const KEY_RE = /^([^\s#-][^:]*?):(?:\s+(.*)|\s*)$/;
 
 /** Top-level keys of the frontmatter with their line ranges. */
 export function topLevelKeys(lines: string[]): KeyBlock[] {
@@ -90,7 +90,7 @@ export function unquote(s: string): string {
 /** Quote a scalar only if YAML would otherwise misread it. */
 export function yamlScalar(s: string): string {
 	if (s === "") return '""';
-	if (/^[\s]|[\s]$/.test(s) || /^[-?:,\[\]{}#&*!|>'"%@`]/.test(s) || /: | #/.test(s) || /^(true|false|null|yes|no|~)$/i.test(s) || /^[0-9.+\-eE]+$/.test(s)) {
+	if (/^[\s]|[\s]$/.test(s) || /^[-?:,[\]{}#&*!|>'"%@`]/.test(s) || /: | #/.test(s) || /^(true|false|null|yes|no|~)$/i.test(s) || /^[0-9.+\-eE]+$/.test(s)) {
 		return JSON.stringify(s);
 	}
 	return s;

@@ -16,7 +16,7 @@ export function promptText(app: App, title: string, label: string, value = "", p
 							this.finish(true);
 						}
 					});
-					setTimeout(() => t.inputEl.focus(), 10);
+					window.setTimeout(() => t.inputEl.focus(), 10);
 				});
 				new Setting(this.contentEl)
 					.addButton((b) => b.setButtonText("Cancel").onClick(() => this.finish(false)))
@@ -65,13 +65,13 @@ export function previewPlan(app: App, plan: Plan): Promise<PlanItem[] | null> {
 					all.onclick = (e) => {
 						e.preventDefault();
 						plan.items.forEach((i) => this.selected.add(i.path));
-						list.querySelectorAll("input").forEach((c) => ((c as HTMLInputElement).checked = true));
+						list.querySelectorAll("input").forEach((c) => (c.checked = true));
 						this.updateBtn();
 					};
 					none.onclick = (e) => {
 						e.preventDefault();
 						this.selected.clear();
-						list.querySelectorAll("input").forEach((c) => ((c as HTMLInputElement).checked = false));
+						list.querySelectorAll("input").forEach((c) => (c.checked = false));
 						this.updateBtn();
 					};
 				}

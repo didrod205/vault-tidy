@@ -1,8 +1,8 @@
-.vt-root { padding: 0 !important; }
+.workspace-leaf-content .view-content.vt-root { padding: 0; }
 .vt-tabs { display: flex; gap: 2px; padding: 8px 8px 0; border-bottom: 1px solid var(--background-modifier-border); flex-wrap: wrap; position: sticky; top: 0; background: var(--background-primary); z-index: 2; }
-.vt-tab { display: inline-flex; align-items: center; gap: 6px; background: none !important; box-shadow: none !important; border: none; border-bottom: 2px solid transparent; border-radius: 0; padding: 6px 10px; color: var(--text-muted); font-size: var(--font-ui-small); cursor: pointer; }
-.vt-tab svg { width: 14px; height: 14px; }
-.vt-tab.is-active { color: var(--text-normal); border-bottom-color: var(--interactive-accent); }
+.vt-tabs button.vt-tab { display: inline-flex; align-items: center; gap: 6px; background: none; box-shadow: none; border: none; border-bottom: 2px solid transparent; border-radius: 0; padding: 6px 10px; color: var(--text-muted); font-size: var(--font-ui-small); cursor: pointer; }
+.vt-tabs button.vt-tab svg { width: 14px; height: 14px; }
+.vt-tabs button.vt-tab.is-active { color: var(--text-normal); border-bottom-color: var(--interactive-accent); }
 .vt-pro-badge { font-size: 9px; font-weight: 700; letter-spacing: .04em; padding: 1px 4px; border-radius: 4px; background: var(--interactive-accent); color: var(--text-on-accent); }
 .vt-body { padding: 12px; }
 .vt-intro { margin-bottom: 8px; }
@@ -47,7 +47,7 @@ button.vt-chip { cursor: pointer; }
 .vt-del { color: var(--text-error); }
 .vt-add { color: var(--text-success, var(--color-green)); }
 .vt-skipped { margin-bottom: 8px; font-size: var(--font-ui-smaller); color: var(--text-muted); }
-.vt-grid { display: grid !important; grid-template-columns: 1fr auto; align-items: center; gap: 8px; border-top: 1px solid var(--background-modifier-border); padding: 6px 0; }
+.vt-suggest-row.vt-grid { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; border-top: 1px solid var(--background-modifier-border); padding: 6px 0; }
 .vt-grid button { margin-left: 0; }
 .vt-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 .vt-arrow { color: var(--text-faint); margin: 0 2px; }

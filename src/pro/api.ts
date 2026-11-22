@@ -22,7 +22,7 @@ export async function activateLicense(key: string, instanceName: string): Promis
 		body: JSON.stringify({ key: key.trim(), instance_name: instanceName }),
 		throw: false,
 	});
-	const j = res.json ?? {};
+	const j = (res.json ?? {}) as { instanceId?: string; email?: string; status?: string; plan?: string; error?: string };
 	if (res.status >= 400 || !j.instanceId) throw new ProError(j.error || `Activation failed (HTTP ${res.status})`);
 	return { key: key.trim(), instanceId: j.instanceId, email: j.email, status: j.status, plan: j.plan, checkedAt: Date.now() };
 }
@@ -46,9 +46,9 @@ async function call<T>(lic: License, path: string, body: unknown): Promise<T> {
 		body: JSON.stringify(body),
 		throw: false,
 	});
-	const j = res.json ?? {};
+	const j = (res.json ?? {}) as T & { error?: string };
 	if (res.status >= 400) throw new ProError(j.error || `Server error (HTTP ${res.status})`);
-	return j as T;
+	return j;
 }
 
 export interface AiMergeGroup {

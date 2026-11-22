@@ -41,7 +41,7 @@ export default class VaultTidyPlugin extends Plugin {
 			leaf = this.app.workspace.getRightLeaf(false) ?? this.app.workspace.getLeaf(true);
 			await leaf.setViewState({ type: VIEW_TYPE, active: true });
 		}
-		this.app.workspace.revealLeaf(leaf);
+		await this.app.workspace.revealLeaf(leaf);
 	}
 
 	refreshViews() {
@@ -80,7 +80,7 @@ export default class VaultTidyPlugin extends Plugin {
 		}
 		const msg = `Updated ${result.applied} note${result.applied === 1 ? "" : "s"}.` + (result.conflicts.length ? ` ${result.conflicts.length} skipped because they changed meanwhile.` : "");
 		new Notice(msg);
-		setTimeout(() => this.refreshViews(), 400);
+		window.setTimeout(() => this.refreshViews(), 400);
 	}
 
 	async undo(b: HistoryBatch) {
@@ -88,11 +88,11 @@ export default class VaultTidyPlugin extends Plugin {
 		b.undone = true;
 		await this.history.save();
 		new Notice(`Undid “${b.title}” in ${r.applied} note${r.applied === 1 ? "" : "s"}.` + (r.conflicts.length ? ` ${r.conflicts.length} were edited since and left as they are.` : ""));
-		setTimeout(() => this.refreshViews(), 400);
+		window.setTimeout(() => this.refreshViews(), 400);
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULTS, await this.loadData());
+		this.settings = Object.assign({}, DEFAULTS, (await this.loadData()) as Partial<Settings> | null);
 	}
 	async saveSettings() {
 		await this.saveData(this.settings);

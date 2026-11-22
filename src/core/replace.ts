@@ -35,7 +35,7 @@ export function replaceInNote(content: string, o: ReplaceOptions, maxSnippets = 
 	let count = 0;
 	const rep = (text: string) =>
 		text.replace(re, (...args) => {
-			const m = args[0] as string;
+			const m: string = args[0];
 			if (m === "") return m;
 			count++;
 			if (!o.regex) return o.replace;

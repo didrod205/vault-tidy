@@ -38,7 +38,7 @@ export function renameKey(content: string, from: string, to: string): PropResult
 }
 
 function needsQuoteKey(k: string): boolean {
-	return /[:#]|^\s|\s$|^[-?\[\]{}&*!|>'"%@`]/.test(k);
+	return /[:#]|^\s|\s$|^[-?[\]{}&*!|>'"%@`]/.test(k);
 }
 
 export function deleteKey(content: string, key: string): PropResult {

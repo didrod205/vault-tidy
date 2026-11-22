@@ -36,7 +36,7 @@ function stem(t: string): string {
 
 function lev(a: string, b: string): number {
 	if (Math.abs(a.length - b.length) > 1) return 2;
-	const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+	const dp: number[][] = Array.from({ length: a.length + 1 }, (_, i) => [i, ...new Array<number>(b.length).fill(0)]);
 	for (let j = 1; j <= b.length; j++) dp[0][j] = j;
 	for (let i = 1; i <= a.length; i++)
 		for (let j = 1; j <= b.length; j++)

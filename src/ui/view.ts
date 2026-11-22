@@ -373,7 +373,7 @@ export class TidyView extends ItemView {
 					.setCta()
 					.onClick(() => {
 						const on = this.aiGroups!.filter((g) => g.on && isValidTag(g.target));
-						if (on.length) this.runMerges(on, `AI: merge ${on.length} tag group${on.length === 1 ? "" : "s"}`);
+						if (on.length) void this.runMerges(on, `AI: merge ${on.length} tag group${on.length === 1 ? "" : "s"}`);
 					}),
 			);
 		}
@@ -476,7 +476,7 @@ export class TidyView extends ItemView {
 function frontTags(fm: Record<string, unknown> | undefined): string[] {
 	if (!fm) return [];
 	const v = fm.tags ?? fm.tag;
-	if (Array.isArray(v)) return v.filter((x) => typeof x === "string") as string[];
+	if (Array.isArray(v)) return v.filter((x): x is string => typeof x === "string");
 	if (typeof v === "string") return v.split(/[,\s]+/).filter(Boolean);
 	return [];
 }

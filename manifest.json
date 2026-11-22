@@ -1,8 +1,8 @@
 {
   "id": "vault-tidy",
   "name": "Vault Tidy",
-  "version": "0.1.0",
-  "minAppVersion": "1.5.0",
+  "version": "0.1.1",
+  "minAppVersion": "1.7.2",
   "description": "Rename, merge and delete tags, bulk-edit properties and find & replace across your vault, with a preview of every change and one-click undo.",
   "author": "E:LAB",
   "authorUrl": "https://elab-studio.com",

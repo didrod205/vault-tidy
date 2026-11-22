@@ -127,7 +127,7 @@ export class HistoryStore {
 	async load() {
 		try {
 			if (await this.app.vault.adapter.exists(this.file)) {
-				this.batches = JSON.parse(await this.app.vault.adapter.read(this.file));
+				this.batches = JSON.parse(await this.app.vault.adapter.read(this.file)) as HistoryBatch[];
 			}
 		} catch (e) {
 			console.error("Vault Tidy: could not read history", e);

@@ -1,5 +1,5 @@
 import esbuild from "esbuild-wasm";
-import builtins from "builtin-modules";
+import { builtinModules as builtins } from "node:module";
 const prod = process.argv[2] === "production";
 await esbuild.build({
   entryPoints: ["src/main.ts"], bundle: true,
